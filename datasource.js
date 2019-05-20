@@ -3,37 +3,51 @@ const { RESTDataSource } = require("apollo-datasource-rest")
 class TwitterAPI extends RESTDataSource {
   constructor() {
     super()
-    this.baseURL = "http://localhost:4000"
+    this.baseURL = "https://ybej3.sse.codesandbox.io"
   }
-
-  // export const getUserInfo = async authToken => {
-  //   return await fetch(`${config.serverUrl}/user`, {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/json"
-  //     },
-  //     body: JSON.stringify({ authToken })
-  //   }).then(r => r.json())
-  // }
 
   async getUserInfo(authToken) {
     try {
-      const res = await this.post("user", authToken)
-      console.log('in user&&&&&&&&&', res)
+      const res = await this.post("user", {
+        authToken: JSON.parse(authToken)
+      })
+      const profile_image_url = res.user.profile_image_url.replace(
+        "_normal",
+        ""
+      )
 
+      return {
+        id: res.user.id,
+        profile_image_url: profile_image_url,
+        screen_name: res.user.screen_name,
+        name: res.user.name,
+        location: res.user.location
+      }
     } catch (e) {
-      console.log('Error', e)
-
+      console.log(e.message)
     }
-    // return {
-    //   id: user.id,
-    //   profile_image_url: user.profile_image_url,
-    //   screen_name: user.screen_name,
-    // }
   }
 
-  async getTestData() {
-    return await this.get("test")
+  async getFeed(authToken) {
+    try {
+      const res = await this.post("home", {
+        authToken: JSON.parse(authToken)
+      })
+      return res.tweets.map(this.reduceTweet)
+    } catch (e) {
+      console.log(e.message)
+    }
+  }
+
+  reduceTweet(tweet) {
+    return {
+      id: tweet.id,
+      profile_image_url: tweet.user.profile_image_url,
+      name: tweet.user.name,
+      text: tweet.text,
+      screen_name: tweet.user.screen_name,
+      favorited: tweet.favorited
+    }
   }
 }
 
