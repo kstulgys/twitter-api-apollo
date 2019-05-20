@@ -1,19 +1,17 @@
 const { ApolloServer, gql } = require("apollo-server")
 const twitterAPI = require("./datasource")
 // Construct a schema, using GraphQL schema language
-
 const typeDefs = gql`
-  type UserInfo {
+  type User{
     id: Int!
     profile_image_url: String!
     screen_name: String!
   }
-
   type Test {
     testName: String!
   }
   type Query {
-    user: UserInfo
+    user: User
     test: Test
   }
 `
@@ -21,8 +19,11 @@ const typeDefs = gql`
 // Provide resolver functions for your schema fields
 const resolvers = {
   Query: {
-    user: async (root, args, { dataSources, context }) => {
-      return dataSources.twitterAPI.getUserInfo(context.authToken)
+    user: async (root, args, { dataSources, authToken }) => {
+      console.log("context.authToken", authToken)
+      const res = await dataSources.twitterAPI.getUserInfo(authToken)
+      console.log(res)
+      return res
     },
     test: async (root, args, { dataSources, context }) => {
       const res = await dataSources.twitterAPI.getTestData()
@@ -35,16 +36,18 @@ const resolvers = {
   }
 }
 
-const context = async ({ req }) => {
+const context = ({ req }) => {
   // simple auth check on every request
-  const auth = (req.headers && req.headers.authorization) || ""
-  console.log("req.headers.authorization", auth)
+  const authToken = (req.headers && req.headers.authorization) || ""
+  // console.log("req.headers.authorization", authToken)
+  return { authToken }
+
 }
 
 const server = new ApolloServer({
+  context,
   typeDefs,
   resolvers,
-  context,
   dataSources: () => ({
     twitterAPI: new twitterAPI()
   })

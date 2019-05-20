@@ -17,7 +17,19 @@ class TwitterAPI extends RESTDataSource {
   // }
 
   async getUserInfo(authToken) {
-    return await this.post("user", authToken)
+    try {
+      const res = await this.post("user", authToken)
+      console.log('in user&&&&&&&&&', res)
+
+    } catch (e) {
+      console.log('Error', e)
+
+    }
+    // return {
+    //   id: user.id,
+    //   profile_image_url: user.profile_image_url,
+    //   screen_name: user.screen_name,
+    // }
   }
 
   async getTestData() {
